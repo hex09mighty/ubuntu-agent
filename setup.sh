@@ -1,44 +1,42 @@
 #!/bin/bash
 
-# -------------------------------
-# CONFIG
-# -------------------------------
+# --- 1. SETTINGS ---
 AGENT_NAME="agent01"
 
 if [[ $EUID -ne 0 ]]; then
-  echo "Run as root (sudo)"
-  exit 1
+   echo "This script must be run as root (use sudo)"
+   exit 1
 fi
 
-echo "----------------------------------------"
-echo "Setting up Restricted Agent Environment"
-echo "----------------------------------------"
+echo "------------------------------------------------"
+echo "Initializing Hardened Agent Architecture..."
+echo "------------------------------------------------"
 
-# -------------------------------
-# 1. CREATE USER (NORMAL SHELL)
-# -------------------------------
+# --- 2. CREATE AGENT USER ---
 if id "$AGENT_NAME" &>/dev/null; then
-  echo "User $AGENT_NAME already exists"
+    echo "User $AGENT_NAME already exists."
 else
-  useradd -m -s /bin/bash "$AGENT_NAME"
-  echo "Set password for $AGENT_NAME"
-  passwd "$AGENT_NAME"
+    # Use normal shell (IMPORTANT)
+    useradd -m -s /bin/bash "$AGENT_NAME"
+    echo "Set password for $AGENT_NAME:"
+    passwd "$AGENT_NAME"
 fi
 
-# -------------------------------
-# 2. REMOVE ADMIN ACCESS
-# -------------------------------
-echo "Removing sudo access..."
+# --- 3. REMOVE ADMIN ACCESS ---
 deluser "$AGENT_NAME" sudo 2>/dev/null
 
-# -------------------------------
-# 3. ALLOW VPN / WIFI (POLKIT)
-# -------------------------------
-echo "Configuring VPN permissions..."
+# --- 4. DISABLE HOTKEYS (Terminal & Shortcuts) ---
+echo "Disabling Terminal hotkeys..."
+sudo -u "$AGENT_NAME" dbus-launch gsettings set \
+org.gnome.settings-daemon.plugins.media-keys terminal "['']"
 
-POLKIT_FILE="/etc/polkit-1/rules.d/50-agent-network.rules"
+sudo -u "$AGENT_NAME" dbus-launch gsettings set \
+org.gnome.desktop.wm.keybindings panel-main-menu "['']"
 
-cat <<EOF > $POLKIT_FILE
+# --- 5. ALLOW VPN / WIFI (POLKIT) ---
+echo "Allowing VPN & network control..."
+
+cat <<EOF > /etc/polkit-1/rules.d/50-agent-network.rules
 polkit.addRule(function(action, subject) {
     if (
         subject.user == "$AGENT_NAME" &&
@@ -49,65 +47,22 @@ polkit.addRule(function(action, subject) {
 });
 EOF
 
-chmod 644 $POLKIT_FILE
+chmod 644 /etc/polkit-1/rules.d/50-agent-network.rules
 
-# -------------------------------
-# 4. BLOCK TERMINAL & APP CENTER
-# -------------------------------
-echo "Blocking Terminal and Software Center access..."
+# --- 6. BASIC HOME HARDENING ---
+chown root:root /home/$AGENT_NAME/.bashrc /home/$AGENT_NAME/.profile
+chmod 644 /home/$AGENT_NAME/.bashrc
 
-# Terminal
-if [ -f /usr/bin/gnome-terminal ]; then
-  chmod 750 /usr/bin/gnome-terminal
-  chown root:root /usr/bin/gnome-terminal
-fi
+# --- 7. SECURE ADMIN HOME ---
+ADMIN_USER=$(logname)
+chmod 700 /home/$ADMIN_USER
 
-# GNOME Software
-if [ -f /usr/bin/gnome-software ]; then
-  chmod 750 /usr/bin/gnome-software
-  chown root:root /usr/bin/gnome-software
-fi
-
-# Snap Store
-if [ -f /snap/bin/snap-store ]; then
-  chmod 750 /snap/bin/snap-store
-  chown root:root /snap/bin/snap-store
-fi
-
-# Disable terminal shortcut (Ctrl+Alt+T)
-sudo -u "$AGENT_NAME" dbus-launch gsettings set \
-org.gnome.settings-daemon.plugins.media-keys terminal "['']"
-
-# -------------------------------
-# 5. BLOCK PACKAGE MANAGERS
-# -------------------------------
-echo "Restricting package managers..."
-
-chmod 750 /usr/bin/apt /usr/bin/apt-get 2>/dev/null
-chmod 750 /usr/bin/snap 2>/dev/null
-
-# -------------------------------
-# 6. BASIC HOME SECURITY
-# -------------------------------
-echo "Securing home directory..."
-
-chmod 700 /home/$AGENT_NAME
-chown "$AGENT_NAME":"$AGENT_NAME" /home/$AGENT_NAME
-
-# -------------------------------
-# DONE
-# -------------------------------
-echo "----------------------------------------"
+echo "------------------------------------------------"
 echo "SETUP COMPLETE"
-echo "----------------------------------------"
-echo "User: $AGENT_NAME"
-echo ""
+echo "------------------------------------------------"
+echo "✔ Terminal shortcut disabled"
 echo "✔ No sudo access"
-echo "✔ Cannot install apps"
-echo "✔ Terminal blocked"
-echo "✔ App Center blocked"
 echo "✔ VPN/WiFi allowed"
-echo "✔ GUI working normally"
-echo ""
-echo "Production-safe, no system breakage."
-echo "----------------------------------------"
+echo "✔ App icons NOT hidden"
+echo "✔ Stable system (no breakage)"
+echo "------------------------------------------------"
