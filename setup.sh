@@ -25,6 +25,32 @@ fi
 # --- 3. REMOVE ADMIN ACCESS ---
 deluser "$AGENT_NAME" sudo 2>/dev/null
 
+# --- 2.5 HIDE TERMINAL & APP CENTER ---
+echo "Hiding Terminal and App Center for $AGENT_NAME..."
+
+sudo -u "$AGENT_NAME" mkdir -p \
+/home/$AGENT_NAME/.local/share/applications
+
+# Hide Terminal
+if [ -f /usr/share/applications/gnome-terminal.desktop ]; then
+    sudo -u "$AGENT_NAME" cp \
+    /usr/share/applications/gnome-terminal.desktop \
+    /home/$AGENT_NAME/.local/share/applications/
+
+    echo "NoDisplay=true" >> \
+    /home/$AGENT_NAME/.local/share/applications/gnome-terminal.desktop
+fi
+
+# Hide Ubuntu Software / App Center
+if [ -f /usr/share/applications/ubuntu-software.desktop ]; then
+    sudo -u "$AGENT_NAME" cp \
+    /usr/share/applications/ubuntu-software.desktop \
+    /home/$AGENT_NAME/.local/share/applications/
+
+    echo "NoDisplay=true" >> \
+    /home/$AGENT_NAME/.local/share/applications/ubuntu-software.desktop
+fi
+
 # --- 4. DISABLE HOTKEYS (Terminal & Shortcuts) ---
 echo "Disabling Terminal hotkeys..."
 sudo -u "$AGENT_NAME" dbus-launch gsettings set \
@@ -51,7 +77,7 @@ chmod 644 /etc/polkit-1/rules.d/50-agent-network.rules
 
 # --- 6. BASIC HOME HARDENING ---
 chown root:root /home/$AGENT_NAME/.bashrc /home/$AGENT_NAME/.profile
-chmod 644 /home/$AGENT_NAME/.bashrc
+chmod 644 /home/$AGENT_NAME/.bashrc /home/$AGENT_NAME/.profile
 
 # --- 7. SECURE ADMIN HOME ---
 ADMIN_USER=$(logname)
