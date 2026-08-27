@@ -1,38 +1,48 @@
 # Ubuntu Agent Lockdown Utility
 
-A security hardening script designed for call center environments. This utility converts a standard Ubuntu installation into a restricted "Thin Client" for agents, ensuring they can only access specified tools (Browser/RDP) while maintaining a high security posture.
+A security hardening script for call center environments that converts a standard Ubuntu installation into a restricted "Thin Client" session.
 
-## 🛡️ Security Features
-- **Restricted Shell (rbash):** Prevents agents from changing directories (`cd`) or modifying system environments.
-- **GUI Lockdown:** Hides the Ubuntu App Center and Terminal from the application grid.
-- **Hotkey Disabling:** Disables `Ctrl+Alt+T` and other terminal shortcuts for the agent.
-- **Process Isolation:** Implements `hidepid=2` so agents cannot see system processes or security services (SentinelOne/Bitdefender).
-- **Admin Privacy:** Locks the root/admin home directory to prevent unauthorized data access.
-- **Zero Sudo:** The agent account is created without administrative privileges.
+## 🛡️ Security & Session Features
+- **X11 Session Enforcement:** Forces the agent session to load under X11 (Xorg) for unattended screen monitoring, keeping Wayland enabled globally for other users.
+- **Dynamic User Creation:** Supports passing a custom username as a script argument (defaults to `agent01`).
+- **Restricted Environment:** Strips sudo privileges, locks administrative home directories, and enforces restricted shell rules.
+- **GUI & Hotkey Lockdown:** Hides Terminal and App Center launcher icons while disabling keybindings (`Ctrl+Alt+T`).
+- **Process Isolation:** Applies `hidepid=2` via `/etc/fstab` to hide system security services (SentinelOne/Bitdefender) from the user.
 
-## 🚀 Installation
+## 🚀 Installation & Usage
 
-Run the setup script directly from this repository using `wget`. Ensure you run this as a user with `sudo` privileges.
+### 1. New Deployments
+Run the setup script directly using `wget`. Pass a custom username as an argument if needed (e.g., `agent02`), or leave it blank for `agent01`.
 
 ```bash
-wget -qO setup.sh https://raw.githubusercontent.com/hex09mighty/ubuntu-agent/refs/heads/main/setup.sh && sudo bash setup.sh
+# Default (agent01)
+wget -qO setup.sh [https://raw.githubusercontent.com/hex09mighty/ubuntu-agent/refs/heads/main/setup.sh](https://raw.githubusercontent.com/hex09mighty/ubuntu-agent/refs/heads/main/setup.sh) && sudo bash setup.sh
+
+# Custom username
+wget -qO setup.sh [https://raw.githubusercontent.com/hex09mighty/ubuntu-agent/refs/heads/main/setup.sh](https://raw.githubusercontent.com/hex09mighty/ubuntu-agent/refs/heads/main/setup.sh) && sudo bash setup.sh agent02
+
 ```
 
-## 🛠️ Configuration Details
-The script performs the following actions:
-1. **User Creation:** Creates a dedicated user (default: `agent01`) with a restricted bash shell.
-2. **Desktop Hardening:** Uses GSettings to wipe terminal keybindings.
-3. **Menu Sanitization:** Creates `.desktop` overrides with `NoDisplay=true` for sensitive system apps.
-4. **FSTAB Hardening:** Updates `/etc/fstab` to ensure process hiding persists across reboots.
+### 2. Patch Existing Agent Users
+
+To apply the X11 session enforcement to an already created agent user, run the patch script:
+
+```bash
+# Patch default user (agent01)
+wget -qO fix-agent-x11.sh [https://raw.githubusercontent.com/hex09mighty/ubuntu-agent/refs/heads/main/fix-agent-x11.sh](https://raw.githubusercontent.com/hex09mighty/ubuntu-agent/refs/heads/main/fix-agent-x11.sh) && sudo bash fix-agent-x11.sh
+
+# Patch custom user
+wget -qO fix-agent-x11.sh [https://raw.githubusercontent.com/hex09mighty/ubuntu-agent/refs/heads/main/fix-agent-x11.sh](https://raw.githubusercontent.com/hex09mighty/ubuntu-agent/refs/heads/main/fix-agent-x11.sh) && sudo bash fix-agent-x11.sh agent02
+
+```
 
 ## 📋 Post-Installation Checklist
-To complete the setup, log in as the **agent** once to:
-1. Set your **Browser** and **RDP Client** (Remmina) to "Startup Applications".
-2. Ensure Bitdefender/SentinelOne policies are pushed from your central console (this script does not interfere with their operation).
+
+Log in as the target agent account manually to:
+
+1. Verify the active session type by running `echo $XDG_SESSION_TYPE` (should return `x11`).
+2. Set your **Browser** and **RDP Client** (Remmina) in **Startup Applications**.
 
 ## ⚠️ Requirements
-- Ubuntu 22.04 LTS or 24.04 LTS.
-- Active Internet connection for initial setup.
 
----
-**Note:** This script is designed for environments where security software like SentinelOne or Bitdefender is already handling USB and peripheral blocking.
+* Ubuntu 22.04 LTS or 24.04 LTS.
