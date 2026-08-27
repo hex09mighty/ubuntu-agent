@@ -16,10 +16,10 @@ Run the setup script directly using `wget`. Pass a custom username as an argumen
 
 ```bash
 # Default (agent01)
-wget -qO setup.sh [https://raw.githubusercontent.com/hex09mighty/ubuntu-agent/refs/heads/main/setup.sh](https://raw.githubusercontent.com/hex09mighty/ubuntu-agent/refs/heads/main/setup.sh) && sudo bash setup.sh
+wget -qO setup.sh https://raw.githubusercontent.com/hex09mighty/ubuntu-agent/refs/heads/main/setup.sh && sudo bash setup.sh
 
 # Custom username
-wget -qO setup.sh [https://raw.githubusercontent.com/hex09mighty/ubuntu-agent/refs/heads/main/setup.sh](https://raw.githubusercontent.com/hex09mighty/ubuntu-agent/refs/heads/main/setup.sh) && sudo bash setup.sh agent02
+wget -qO setup.sh https://raw.githubusercontent.com/hex09mighty/ubuntu-agent/refs/heads/main/setup.sh && sudo bash setup.sh agent02
 
 ```
 
@@ -29,10 +29,10 @@ To apply the X11 session enforcement to an already created agent user, run the p
 
 ```bash
 # Patch default user (agent01)
-wget -qO fix-agent-x11.sh [https://raw.githubusercontent.com/hex09mighty/ubuntu-agent/refs/heads/main/fix-agent-x11.sh](https://raw.githubusercontent.com/hex09mighty/ubuntu-agent/refs/heads/main/fix-agent-x11.sh) && sudo bash fix-agent-x11.sh
+wget -qO fix-agent-x11.sh https://raw.githubusercontent.com/hex09mighty/ubuntu-agent/refs/heads/main/fix-agent-x11.sh && sudo bash fix-agent-x11.sh
 
 # Patch custom user
-wget -qO fix-agent-x11.sh [https://raw.githubusercontent.com/hex09mighty/ubuntu-agent/refs/heads/main/fix-agent-x11.sh](https://raw.githubusercontent.com/hex09mighty/ubuntu-agent/refs/heads/main/fix-agent-x11.sh) && sudo bash fix-agent-x11.sh agent02
+wget -qO fix-agent-x11.sh https://raw.githubusercontent.com/hex09mighty/ubuntu-agent/refs/heads/main/fix-agent-x11.sh && sudo bash fix-agent-x11.sh agent02
 
 ```
 
