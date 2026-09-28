@@ -63,13 +63,19 @@ if [ -f /usr/share/applications/ubuntu-software.desktop ]; then
     "/home/$AGENT_NAME/.local/share/applications/ubuntu-software.desktop"
 fi
 
-# --- 5. DISABLE HOTKEYS (Terminal & Shortcuts) ---
-echo "Disabling Terminal hotkeys..."
-sudo -u "$AGENT_NAME" dbus-launch gsettings set \
-org.gnome.settings-daemon.plugins.media-keys terminal "['']"
+# --- 5. DISABLE HOTKEYS (DCONF DEFAULT OVERRIDE) ---
+echo "Disabling Terminal hotkeys permanently..."
 
-sudo -u "$AGENT_NAME" dbus-launch gsettings set \
-org.gnome.desktop.wm.keybindings panel-main-menu "['']"
+mkdir -p /etc/dconf/db/local.d/
+cat <<EOF > /etc/dconf/db/local.d/00-disable-terminal
+[org/gnome/settings-daemon/plugins/media-keys]
+terminal=['']
+
+[org/gnome/desktop/wm/keybindings]
+panel-main-menu=['']
+EOF
+
+dconf update
 
 # --- 6. ALLOW VPN / WIFI (POLKIT) ---
 echo "Allowing VPN & network control..."
